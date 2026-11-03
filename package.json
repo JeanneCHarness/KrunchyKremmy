@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "frontend",
-    "backend"
+    "Krunchy",
+    "Kremmy"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
-    "build": "npm run build -w frontend",
-    "test": "npm run test -w backend",
-    "db:generate": "npm run db:generate -w backend",
-    "db:migrate": "npm run db:migrate -w backend",
-    "db:deploy": "npm run db:deploy -w backend",
-    "db:seed": "npm run db:seed -w backend"
+    "dev": "concurrently \"npm run dev -w Kremmy\" \"npm run dev -w Krunchy\"",
+    "build": "npm run build -w Krunchy",
+    "test": "npm run test -w Kremmy",
+    "db:generate": "npm run db:generate -w Kremmy",
+    "db:migrate": "npm run db:migrate -w Kremmy",
+    "db:deploy": "npm run db:deploy -w Kremmy",
+    "db:seed": "npm run db:seed -w Kremmy"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

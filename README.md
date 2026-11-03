@@ -10,9 +10,9 @@ The expanded sample catalog includes cupcakes, hot dogs and buffet, chicken and 
 
 ## Project layout
 
-- `frontend/` — React + Vite customer storefront and customization experiences.
-- `backend/` — Express API, validation, commerce services, and Prisma access.
-- `backend/prisma/` — PostgreSQL schema and sample development catalog.
+- `Krunchy/` — React + Vite customer storefront and customization experiences.
+- `Kremmy/` — Express API, validation, commerce services, and Prisma access.
+- `Kremmy/prisma/` — PostgreSQL schema and sample development catalog.
 
 ## Staged delivery and status
 
@@ -42,7 +42,7 @@ Requirements: Node.js 20.19+, npm, and PostgreSQL.
 
 The frontend is served at `http://localhost:5173`; the API health endpoint is `http://localhost:4000/api/health`.
 
-To provision the first staff account, apply database migrations, then set `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_NAME`, and `ADMIN_BOOTSTRAP_PASSWORD` through a secure one-time environment and run `npm run admin:create -w backend`. The password must be at least 12 characters. This command creates a new, verified administrator and intentionally refuses to change the role of an existing account. Remove the bootstrap variables immediately afterward; never commit them or leave them configured in a long-lived host environment.
+To provision the first staff account, apply database migrations, then set `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_NAME`, and `ADMIN_BOOTSTRAP_PASSWORD` through a secure one-time environment and run `npm run admin:create -w Kremmy`. The password must be at least 12 characters. This command creates a new, verified administrator and intentionally refuses to change the role of an existing account. Remove the bootstrap variables immediately afterward; never commit them or leave them configured in a long-lived host environment.
 
 ## Event booking request API
 
