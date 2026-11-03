@@ -1,0 +1,554 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  COLLECTED
+  PAYMENT_REVIEW
+}
+
+enum FulfillmentMethod {
+  DELIVERY
+  PICKUP
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum EventBookingStatus {
+  REQUESTED
+  UNDER_REVIEW
+  QUOTE_SENT
+  AWAITING_CUSTOMER_APPROVAL
+  AWAITING_DEPOSIT
+  CONFIRMED
+  IN_PREPARATION
+  COMPLETED
+  CANCELLATION_REQUESTED
+  CANCELLED
+  DECLINED
+}
+
+enum EventPriceMode {
+  QUOTE
+  FIXED
+  PER_GUEST
+  PER_SERVICE
+}
+
+enum EmailTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model User {
+  id              String       @id @default(cuid())
+  email           String       @unique
+  passwordHash    String
+  name            String
+  role            UserRole     @default(CUSTOMER)
+  emailVerifiedAt DateTime?
+  failedLoginAttempts Int      @default(0)
+  loginFailureWindowStartedAt DateTime?
+  loginLockedUntil DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  orders          Order[]
+  bookings        Booking[]
+  sessions        UserSession[]
+  emailTokens     EmailToken[]
+}
+
+model AuthRateLimitBucket {
+  id        String   @id
+  hits      Int      @default(0)
+  resetAt   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  type      String
+  userId    String?
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([createdAt])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+}
+
+model EmailToken {
+  id        String           @id @default(cuid())
+  tokenHash String           @unique
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   EmailTokenPurpose
+  expiresAt DateTime
+  consumedAt DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, purpose, expiresAt])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  imageUrl    String
+  active      Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String
+  priceCents  Int
+  stock       Int         @default(0)
+  imageUrl    String
+  customizationOptions Json?
+  featured    Boolean     @default(false)
+  available   Boolean     @default(true)
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([categoryId, available])
+}
+
+model BuilderOption {
+  id            String   @id @default(cuid())
+  kind          String
+  groupKey      String
+  name          String
+  priceCents    Int
+  stock         Int      @default(9999)
+  maxSelections Int      @default(1)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([kind, groupKey, name])
+  @@index([kind, groupKey, active])
+}
+
+model Order {
+  id                String        @id @default(cuid())
+  orderNumber       String        @unique
+  userId            String?
+  user              User?         @relation(fields: [userId], references: [id])
+  email             String
+  status            OrderStatus   @default(PENDING)
+  paymentStatus     PaymentStatus @default(PENDING)
+  subtotalCents     Int
+  deliveryFeeCents  Int           @default(0)
+  taxCents          Int           @default(0)
+  totalCents        Int           @default(0)
+  currency          String        @default("ngn")
+  fulfillmentMethod FulfillmentMethod?
+  fulfillmentTimeZone String?
+  deliveryZoneId    String?
+  deliveryZone      DeliveryZone? @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
+  deliveryZoneName  String?
+  deliveryNeighborhood String?
+  recipientName     String?
+  recipientPhone    String?
+  deliveryAddress   String?
+  deliveryBuilding  String?
+  deliveryLandmark  String?
+  deliveryInstructions String?
+  pickupLocationName String?
+  pickupLocationAddress String?
+  pickupLocationPhone String?
+  pickupInstructions String?
+  scheduledStartAt  DateTime?
+  scheduledEndAt    DateTime?
+  scheduleSlotId    String?
+  scheduleSlot      FulfillmentSlot? @relation(fields: [scheduleSlotId], references: [id], onDelete: SetNull)
+  reservationExpiresAt DateTime?
+  reservationActive Boolean @default(false)
+  assignedRiderName String?
+  riderContact      String?
+  dispatchNotes     String?
+  trackingReference String?
+  dispatchedAt      DateTime?
+  completedAt       DateTime?
+  customerNotes     String?
+  checkoutIdempotencyKey String?  @unique
+  checkoutRequestHash String?
+  paymentReference  String?       @unique
+  paymentAuthorizationUrl String?
+  providerTransactionId String?   @unique
+  providerSessionId String?       @unique
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+  paymentAttempts  PaymentAttempt[]
+  notifications    OrderNotification[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([deliveryZoneId])
+  @@index([scheduleSlotId])
+}
+
+model DeliveryZone {
+  id                     String   @id @default(cuid())
+  name                   String
+  slug                   String   @unique
+  description            String   @default("")
+  neighborhoods          String[]
+  feeCents               Int
+  estimatedDurationMinutes Int
+  minimumLeadMinutes     Int      @default(0)
+  active                 Boolean  @default(false)
+  orders                 Order[]
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([active, name])
+}
+
+model PickupLocation {
+  id                    String   @id @default("primary")
+  name                  String
+  address               String
+  neighborhood          String
+  city                  String
+  state                 String
+  directions            String?
+  instructions          String?
+  phone                 String?
+  active                Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model FulfillmentSchedule {
+  id                     String   @id @default(cuid())
+  method                 FulfillmentMethod @unique
+  timeZone               String
+  operatingDays          Json
+  startTime              String
+  endTime                String
+  slotDurationMinutes    Int
+  maximumOrdersPerSlot   Int
+  cutoffMinutes          Int      @default(0)
+  minimumLeadMinutes     Int
+  maximumHorizonDays      Int      @default(30)
+  active                 Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+}
+
+model FulfillmentBlackoutDate {
+  id        String   @id @default(cuid())
+  method    FulfillmentMethod?
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([method, startsAt, endsAt])
+}
+
+model FulfillmentSlot {
+  id             String   @id @default(cuid())
+  method         FulfillmentMethod
+  startsAt       DateTime
+  endsAt         DateTime
+  capacity       Int
+  reservedCount  Int      @default(0)
+  orders         Order[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([method, startsAt])
+  @@index([startsAt, method])
+}
+
+model PaymentAttempt {
+  id                     String   @id @default(cuid())
+  orderId                String
+  order                  Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider               String   @default("paystack")
+  reference              String   @unique
+  authorizationUrl       String?
+  providerTransactionId  String?  @unique
+  status                 PaymentStatus @default(PENDING)
+  amountKobo             Int
+  currency               String   @default("ngn")
+  verifiedAt             DateTime?
+  reconciliationRequired Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([orderId, createdAt])
+}
+
+model OrderNotification {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type          String
+  status        String   @default("PENDING")
+  attempts      Int      @default(0)
+  lastError     String?
+  lastAttemptAt DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([orderId, type])
+  @@index([status, updatedAt])
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus?
+  toStatus  OrderStatus
+  actorId   String
+  reason    String?
+  createdAt DateTime    @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName    String
+  unitPriceCents Int
+  quantity       Int
+  customization  Json?
+}
+
+model NewsletterSubscriber {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  consentedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model EventType {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String
+  active      Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model EventService {
+  id                   String             @id @default(cuid())
+  name                 String
+  slug                 String             @unique
+  description          String
+  imageUrl             String
+  includes             Json
+  customizationOptions Json
+  startingPriceCents   Int?
+  active               Boolean            @default(true)
+  sortOrder            Int                @default(0)
+  bookingServices      BookingService[]
+  packageItems         EventPackageItem[]
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model EventPackage {
+  id            String             @id @default(cuid())
+  name          String
+  slug          String             @unique
+  description   String
+  priceMode     EventPriceMode     @default(QUOTE)
+  priceCents    Int?
+  minimumGuests Int                @default(1)
+  active        Boolean            @default(true)
+  sortOrder     Int                @default(0)
+  items         EventPackageItem[]
+  bookings      Booking[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model EventPackageItem {
+  id          String       @id @default(cuid())
+  packageId   String
+  package     EventPackage @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     EventService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  description String?
+
+  @@unique([packageId, serviceId])
+}
+
+model Booking {
+  id                 String                 @id @default(cuid())
+  reference          String                 @unique
+  idempotencyKey     String                 @unique
+  accessTokenHash    String
+  userId             String?
+  user               User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventTypeId        String
+  eventType          EventType              @relation(fields: [eventTypeId], references: [id], onDelete: Restrict)
+  packageId          String?
+  package            EventPackage?          @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  eventName          String?
+  otherEventType     String?
+  startsAt           DateTime
+  endsAt             DateTime
+  timeZone           String
+  guestCount         Int
+  ageGroup           String?
+  venueName          String?
+  venueType          String
+  address            String
+  city               String
+  region             String?
+  postalCode         String?
+  setupType          String
+  accessInstructions String?
+  customerName       String
+  customerEmail      String
+  customerPhone      String
+  contactMethod      String
+  companyName        String?
+  specialRequests    String?
+  budgetRange        String?
+  status             EventBookingStatus     @default(REQUESTED)
+  paymentStatus      PaymentStatus          @default(PENDING)
+  availabilityNote   String                 @default("Staff availability review required.")
+  quoteTotalCents    Int?
+  currency           String                 @default("ngn")
+  consentAcceptedAt  DateTime
+  consentVersion     String
+  services           BookingService[]
+  quotations         BookingQuotation[]
+  history            BookingStatusHistory[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  @@index([startsAt, status])
+  @@index([customerEmail, createdAt])
+  @@index([status, createdAt])
+}
+
+model BookingService {
+  id            String       @id @default(cuid())
+  bookingId     String
+  booking       Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceId     String
+  service       EventService @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  serviceName   String
+  servings      Int
+  customization Json
+
+  @@unique([bookingId, serviceId])
+}
+
+model BookingQuotation {
+  id           String    @id @default(cuid())
+  bookingId    String
+  booking      Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  version      Int
+  amountCents  Int
+  currency     String    @default("ngn")
+  items        Json
+  depositCents Int?
+  validUntil   DateTime?
+  acceptedAt   DateTime?
+  declinedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([bookingId, version])
+}
+
+model BookingStatusHistory {
+  id         String              @id @default(cuid())
+  bookingId  String
+  booking    Booking             @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  fromStatus EventBookingStatus?
+  toStatus   EventBookingStatus
+  actorId    String?
+  reason     String?
+  createdAt  DateTime            @default(now())
+
+  @@index([bookingId, createdAt])
+}
+
+model EventBlackoutDate {
+  id        String   @id @default(cuid())
+  startsAt  DateTime
+  endsAt    DateTime
+  reason    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([startsAt, endsAt, active])
+}
+
+model BookingAvailability {
+  id                 String   @id @default(cuid())
+  scope              String   @unique @default("default")
+  timeZone           String
+  operatingDays      Json
+  availableStartTime String
+  availableEndTime   String
+  minimumLeadHours   Int      @default(72)
+  maximumHorizonDays Int      @default(365)
+  maximumConcurrent  Int      @default(1)
+  setupBufferMinutes Int      @default(60)
+  active             Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+}
