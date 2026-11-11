@@ -42,6 +42,24 @@ Requirements: Node.js 20.19+, npm, and PostgreSQL.
 
 The frontend is served at `http://localhost:5173`; the API health endpoint is `http://localhost:4000/api/health`.
 
+## Deploy on Vercel
+
+This repository is a monorepo: `Krunchy/` is the Vite storefront and `Kremmy/` is the Express API. Import the repository as **one Vercel project using Services**, with the repository root as the project root. The root `vercel.json` builds each app separately and routes `/api/*` to Express and all other paths to Vite on the same origin. Do not import only one detected application; doing so leaves the other part of the app unavailable.
+
+Add these project environment variables in Vercel for Production and Preview as appropriate:
+
+- `DATABASE_URL` — the Supabase PostgreSQL connection URI. Use the Supabase session pooler URI for IPv4-compatible deployment and encode special characters in the password.
+- `FRONTEND_ORIGIN` — the deployed storefront origin, such as `https://your-project.vercel.app`; update it if you attach a custom domain. This is used for payment-return URLs and allowed origins.
+- `SECURITY_HASH_KEY` — a stable secret generated from at least 32 random bytes. Keep it unchanged across deployments.
+- `CHECKOUT_ENABLED=false` — leave disabled until live business fulfilment settings and Paystack production credentials have been verified.
+- `PAYSTACK_SECRET_KEY` — only when configuring Paystack; use the correct test or live secret for the environment.
+- `PAYMENT_RESERVATION_MINUTES` — a positive integer from 1 to 1440 when enabling checkout.
+- `RESEND_API_KEY` and `EMAIL_FROM` — configure only after transactional email is ready.
+
+Supabase Auth API keys are not a substitute for `DATABASE_URL`; this application currently uses its own database-backed account and session implementation. Vercel does not read the ignored local `.env`. Apply schema updates with `npm run db:deploy -w Kremmy` against the intended database before deploying code that depends on them.
+
+Vercel runs the Express app as a function, not as the persistent `server.js` process. The in-process cleanup intervals in `server.js` therefore do not run in production; reservation expiry is also triggered by checkout and slot activity, but scheduled security-data cleanup requires a separately configured Vercel Cron or another persistent worker before relying on it operationally.
+
 To provision the first staff account, apply database migrations, then set `ADMIN_BOOTSTRAP_EMAIL`, `ADMIN_BOOTSTRAP_NAME`, and `ADMIN_BOOTSTRAP_PASSWORD` through a secure one-time environment and run `npm run admin:create -w Kremmy`. The password must be at least 12 characters. This command creates a new, verified administrator and intentionally refuses to change the role of an existing account. Remove the bootstrap variables immediately afterward; never commit them or leave them configured in a long-lived host environment.
 
 ## Event booking request API

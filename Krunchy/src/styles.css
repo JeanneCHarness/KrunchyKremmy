@@ -638,6 +638,218 @@ h1 em, h2 em { color: var(--color-purple-dark); font-weight: 500; }
   .admin-record .admin-actions { width: 100%; justify-content: flex-start; }
   .admin-inline-form { grid-template-columns: 1fr; }
 }
+
+select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-purple-light); outline-offset: 3px; }
+select, textarea { font: inherit; }
+.button { min-height: 48px; padding-inline: 21px; border-radius: 999px; }
+.icon-button { min-width: 44px; min-height: 44px; }
+.account-button, .bag-button { min-height: 44px; }
+.eyebrow { font-size: 11px; }
+.hero-description, .section-intro, .product-description, .events-intro > p,
+.builder-copy > p:not(.eyebrow):not(.fine-print), .little-joy > p:not(.eyebrow),
+.footer-brand p { font-size: 14px; line-height: 1.75; }
+.main-nav a, .account-button, .bag-button, .text-link, .filter-chip { font-size: 13px; }
+.category-copy small, .event-service-copy p, .footer-links, .newsletter { font-size: 12px; }
+.product-category { font-size: 10px; }
+.product-info h3 { font-size: clamp(17px, 1.5vw, 21px); }
+.product-buy strong { font-size: 13px; }
+.button:focus-visible, .filter-chip:focus-visible, .product-option:focus-visible,
+.option-chip:focus-visible, .booking-option:focus-visible, .choice-card:focus-visible {
+  outline: 2px solid var(--color-purple-light);
+  outline-offset: 3px;
+}
+.category-card, .product-image, .event-service-card, .event-package-card,
+.builder-photo, .product-modal, .builder-modal, .auth-modal, .event-booking-modal,
+.admin-card { border-radius: 16px; }
+.search-field, .filter-chip, .button, .auth-form input, .auth-token input,
+.checkout-form input, .checkout-form select, .wizard-fields input,
+.wizard-fields select, .wizard-fields textarea, .admin-search input,
+.admin-form input, .admin-form textarea, .admin-form select,
+.admin-inline-form input, .admin-record select { border-radius: 9px; }
+.product-buy button, .favorite-button { width: 40px; height: 40px; }
+.serving-control button, .quantity-control button { width: 36px; height: 36px; }
+.filter-chip { min-height: 40px; padding-inline: 16px; }
+.option-chip, .product-option, .booking-option { min-height: 36px; padding-inline: 12px; }
+.auth-form input, .auth-token input, .checkout-form input, .checkout-form select,
+.wizard-fields input, .wizard-fields select, .admin-search input,
+.admin-form input, .admin-form select, .admin-inline-form input, .admin-record select {
+  min-height: 44px;
+}
+.cart-drawer { height: 100dvh; overscroll-behavior: contain; }
+.cart-drawer, .event-booking-modal, .builder-modal, .product-modal, .auth-modal {
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  overscroll-behavior: contain;
+}
+.event-booking-modal, .builder-modal, .product-modal, .auth-modal {
+  max-height: calc(100dvh - 32px);
+}
+.modal-backdrop, .drawer-backdrop { overscroll-behavior: contain; }
+.toast { bottom: max(24px, env(safe-area-inset-bottom)); }
+
+@media (min-width: 1121px) {
+  .hero h1 { font-size: clamp(56px, 4.7vw, 68px); }
+}
+
+@media (min-width: 701px) and (max-width: 1120px) {
+  .hero h1 { font-size: clamp(48px, 5.2vw, 58px); }
+}
+
+@media (min-width: 701px) and (max-width: 820px) {
+  .hero { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 18px; }
+  .hero h1 { font-size: 44px; }
+  .hero-art { height: 400px; min-height: 320px; }
+}
+
+@media (max-width: 1120px) {
+  .site-header {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .mobile-menu { display: grid; }
+  .site-header > .wordmark {
+    grid-column: 2;
+    justify-self: start;
+    font-size: clamp(28px, 3.4vw, 35px);
+  }
+  .main-nav {
+    position: absolute;
+    top: 100%;
+    left: var(--page-gutter);
+    width: min(390px, calc(100vw - 2 * var(--page-gutter)));
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
+    display: none;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 18px 14px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-top: 0;
+  }
+  .main-nav.nav-open { display: flex; flex-direction: column; }
+  .main-nav a { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+  .header-actions { gap: 8px; }
+  .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: none; }
+  .category-tall { grid-row: auto; }
+  .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 16px; }
+  .event-service-grid { gap: 14px; }
+  .event-service-copy { min-height: 0; }
+  .admin-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-tabs { gap: 4px; }
+  .admin-tabs button { padding-inline: 12px; }
+  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 32px; }
+}
+
+@media (max-width: 700px) {
+  .site-header {
+    height: 68px;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .site-header > .wordmark {
+    grid-column: 2;
+    justify-self: center;
+    font-size: clamp(26px, 8vw, 32px);
+  }
+  .header-actions { gap: 2px; }
+  .account-button { padding-inline: 5px; }
+  .bag-button { gap: 5px; }
+  .main-nav {
+    top: 100%;
+    left: max(16px, env(safe-area-inset-left));
+    width: min(390px, calc(100vw - 32px));
+    max-height: calc(100dvh - 84px);
+  }
+  .hero { padding-top: clamp(38px, 8vh, 54px); }
+  .hero-description, .section-intro, .product-description, .events-intro > p,
+  .builder-copy > p:not(.eyebrow):not(.fine-print), .little-joy > p:not(.eyebrow),
+  .footer-brand p { font-size: 13px; }
+  .category-grid { grid-auto-rows: minmax(170px, 42vw); }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 27px 13px; }
+  .product-info { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .product-buy { justify-content: space-between; }
+  .product-info h3 { font-size: 16px; }
+  .product-description { font-size: 12px; }
+  .product-buy button, .favorite-button { width: 38px; height: 38px; }
+  .event-service-copy { min-height: 0; }
+  .event-service-copy p { min-height: 0; font-size: 11px; }
+  .footer-main { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .modal-backdrop, .event-booking-backdrop {
+    align-items: flex-end;
+    padding: 0;
+    padding-top: env(safe-area-inset-top);
+  }
+  .event-booking-modal, .builder-modal, .product-modal, .auth-modal {
+    width: 100%;
+    max-height: calc(100dvh - max(8px, env(safe-area-inset-top)));
+    border-radius: 20px 20px 0 0;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .product-modal { grid-template-columns: minmax(0, 1fr); }
+  .product-modal > img { height: min(28dvh, 240px); min-height: 170px; }
+  .product-modal-copy { padding: 24px 22px 20px; }
+  .cart-drawer {
+    height: 100dvh;
+    padding-top: max(18px, env(safe-area-inset-top));
+    padding-right: max(19px, env(safe-area-inset-right));
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    padding-left: max(19px, env(safe-area-inset-left));
+  }
+  .drawer-heading { flex: 0 0 auto; }
+  .cart-items { flex: 0 1 32%; }
+  .cart-summary { flex: 1 1 0; max-height: none; }
+  .checkout-form { padding-bottom: 4px; }
+  .checkout-form input, .checkout-form select { min-height: 46px; }
+  .wizard-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+  .admin-tabs button { flex: 0 0 auto; }
+  .admin-record { flex-direction: column; }
+  .admin-record .admin-actions { width: 100%; justify-content: flex-start; }
+  .toast {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+  }
+}
+
+@media (max-width: 500px) {
+  .wizard-fields, .booking-custom-fields { grid-template-columns: minmax(0, 1fr); }
+  .wizard-fields .wizard-wide, .booking-custom-fields .assistance-check { grid-column: auto; }
+  .wizard-service-list { grid-template-columns: minmax(0, 1fr); }
+  .booking-custom-heading { flex-wrap: wrap; }
+  .booking-custom-heading label { flex: 1 1 100%; }
+  .footer-main { gap: 24px 16px; }
+}
+
+@media (max-width: 360px) {
+  :root { --page-gutter: 16px; }
+  body { min-width: 0; }
+  .site-header { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 4px; }
+  .site-header > .wordmark { font-size: 20px; }
+  .header-actions { gap: 0; }
+  .account-button { padding-inline: 4px; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) and (max-width: 900px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+  }
+  .hero-art { height: min(70dvh, 400px); min-height: 240px; }
+  .hero-footnote { margin-top: 20px; }
+  .event-booking-modal, .builder-modal, .product-modal, .auth-modal {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

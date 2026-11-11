@@ -1,0 +1,29 @@
+{
+  "services": {
+    "storefront": {
+      "root": "Krunchy",
+      "framework": "vite",
+      "buildCommand": "npm run build"
+    },
+    "api": {
+      "root": "Kremmy",
+      "framework": "express",
+      "entrypoint": "src/app.js",
+      "buildCommand": "npm run db:generate"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "storefront"
+      }
+    }
+  ]
+}
