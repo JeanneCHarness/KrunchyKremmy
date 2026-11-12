@@ -250,7 +250,7 @@ function App() {
   return (
     <>
       <div className="announcement">
-        <span>Every Bite, A Little More Joy.</span>
+        <span>Bliss in every Bite</span>
         <span className="announcement-right">Small-batch treats, made with love <span className="star-decoration" aria-hidden="true">✳</span></span>
       </div>
       <header className="site-header">
@@ -385,7 +385,7 @@ function App() {
         <div className="footer-main">
           <div className="footer-brand">
             <a className="wordmark" href="#home">KrunchyKremmy</a>
-            <p>Every Bite, A Little More Joy.<br />Made with love, meant to be enjoyed.</p>
+            <p>Bliss in every Bite<br />Made with love, meant to be enjoyed.</p>
             <nav className="footer-socials" aria-label="Social media">
               <a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" strokeWidth="1.8" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" strokeWidth="1.8" /><circle cx="17.5" cy="6.8" r="1.1" /></svg>
