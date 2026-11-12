@@ -437,6 +437,7 @@ model Booking {
   id                 String                 @id @default(cuid())
   reference          String                 @unique
   idempotencyKey     String                 @unique
+  idempotencyRequestHash String?
   accessTokenHash    String
   userId             String?
   user               User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)

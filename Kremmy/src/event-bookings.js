@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { z } from "zod";
 
 const bookingCustomizationSchema = z.object({
@@ -37,7 +38,10 @@ const bookingCustomizationSchema = z.object({
 }).strict();
 
 export const bookingSchema = z.object({
-  idempotencyKey: z.string().uuid(),
+  idempotencyKey: z.string().refine(
+    (value) => z.string().uuid().safeParse(value).success || /^[a-f0-9]{64}$/.test(value),
+    "Expected a UUID or 256-bit lowercase hexadecimal key."
+  ),
   eventTypeSlug: z.string().min(1).max(80),
   eventName: z.string().trim().max(120).optional(),
   otherEventType: z.string().trim().max(120).optional(),
@@ -70,6 +74,11 @@ export const bookingSchema = z.object({
   termsAccepted: z.literal(true),
   honeypot: z.string().max(0).optional()
 }).strict();
+
+export function bookingRequestHash(input) {
+  const { idempotencyKey, ...payload } = input;
+  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
+}
 
 export function validateBookingTime(input, now = new Date()) {
   const startsAt = new Date(input.startsAt);

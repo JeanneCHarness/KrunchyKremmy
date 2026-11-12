@@ -1,0 +1,552 @@
+{
+  "/ice-cream/Chocolate-Draped Ice Cream Cone Delight.png": {
+    "width": 1070,
+    "height": 1470,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/4d43dd40e880879f-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/4d43dd40e880879f-960.webp"
+      },
+      {
+        "width": 1070,
+        "src": "/optimized/4d43dd40e880879f-1070.webp"
+      }
+    ]
+  },
+  "/ice-cream/Colorful Sundae Topping Bar.png": {
+    "width": 1064,
+    "height": 1479,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/3cf269e3af75903d-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/3cf269e3af75903d-960.webp"
+      },
+      {
+        "width": 1064,
+        "src": "/optimized/3cf269e3af75903d-1064.webp"
+      }
+    ]
+  },
+  "/ice-cream/KrunchyKremmy Ice Cream Cart.png": {
+    "width": 1145,
+    "height": 1374,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/2394b3244fdcc555-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/2394b3244fdcc555-960.webp"
+      },
+      {
+        "width": 1145,
+        "src": "/optimized/2394b3244fdcc555-1145.webp"
+      }
+    ]
+  },
+  "/ice-cream/Pastel Ice Cream Cart in the Park.png": {
+    "width": 1312,
+    "height": 1199,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/bcb047990f10f4dd-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/bcb047990f10f4dd-960.webp"
+      },
+      {
+        "width": 1312,
+        "src": "/optimized/bcb047990f10f4dd-1312.webp"
+      }
+    ]
+  },
+  "/ice-cream/Pistachio Ice Cream Dessert Spread.png": {
+    "width": 1086,
+    "height": 1448,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/9e29ea94c47c4619-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/9e29ea94c47c4619-960.webp"
+      },
+      {
+        "width": 1086,
+        "src": "/optimized/9e29ea94c47c4619-1086.webp"
+      }
+    ]
+  },
+  "/ice-cream/Strawberry Ice Cream Bowl with Mint.png": {
+    "width": 1086,
+    "height": 1448,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/396bb2a620d6aa05-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/396bb2a620d6aa05-960.webp"
+      },
+      {
+        "width": 1086,
+        "src": "/optimized/396bb2a620d6aa05-1086.webp"
+      }
+    ]
+  },
+  "/ice-cream/Vanilla Soft-Serve Cone in Action.png": {
+    "width": 1018,
+    "height": 1545,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/13d14f6db622e97d-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/13d14f6db622e97d-960.webp"
+      },
+      {
+        "width": 1018,
+        "src": "/optimized/13d14f6db622e97d-1018.webp"
+      }
+    ]
+  },
+  "/images/Caramel Popcorn Still Life.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/e41e65b42e15065b-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/e41e65b42e15065b-960.webp"
+      },
+      {
+        "width": 1254,
+        "src": "/optimized/e41e65b42e15065b-1254.webp"
+      }
+    ]
+  },
+  "/images/cotton candy-1.png": {
+    "width": 1672,
+    "height": 941,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/64bc0bfdebfcf268-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/64bc0bfdebfcf268-960.webp"
+      },
+      {
+        "width": 1440,
+        "src": "/optimized/64bc0bfdebfcf268-1440.webp"
+      },
+      {
+        "width": 1672,
+        "src": "/optimized/64bc0bfdebfcf268-1672.webp"
+      }
+    ]
+  },
+  "/images/cotton-candy-2.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/d7fea7317cba9fd8-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/d7fea7317cba9fd8-960.webp"
+      },
+      {
+        "width": 1024,
+        "src": "/optimized/d7fea7317cba9fd8-1024.webp"
+      }
+    ]
+  },
+  "/images/crunchykremmy-logo.jpeg": {
+    "width": 439,
+    "height": 439,
+    "variants": [
+      {
+        "width": 439,
+        "src": "/optimized/dcde56a3db24f716-439.webp"
+      }
+    ]
+  },
+  "/images/Glossy Trio of Soft-Serve Cones.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/b64fb7c3ff10f113-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/b64fb7c3ff10f113-960.webp"
+      },
+      {
+        "width": 1254,
+        "src": "/optimized/b64fb7c3ff10f113-1254.webp"
+      }
+    ]
+  },
+  "/images/ice-cream-cone-cupcakesf.jpg": {
+    "width": 1200,
+    "height": 1200,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/0c618a0926ecd9ff-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/0c618a0926ecd9ff-960.webp"
+      },
+      {
+        "width": 1200,
+        "src": "/optimized/0c618a0926ecd9ff-1200.webp"
+      }
+    ]
+  },
+  "/images/KrunchyKremmy Instagram Party Frame.png": {
+    "width": 1233,
+    "height": 1275,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/9fc6bda4c85fce57-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/9fc6bda4c85fce57-960.webp"
+      },
+      {
+        "width": 1233,
+        "src": "/optimized/9fc6bda4c85fce57-1233.webp"
+      }
+    ]
+  },
+  "/images/Pistachio gelato-2.png": {
+    "width": 1180,
+    "height": 1333,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/9390bba464c46196-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/9390bba464c46196-960.webp"
+      },
+      {
+        "width": 1180,
+        "src": "/optimized/9390bba464c46196-1180.webp"
+      }
+    ]
+  },
+  "/images/Pistachio gelato.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/213ce1d1ac79b3a4-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/213ce1d1ac79b3a4-960.webp"
+      },
+      {
+        "width": 1024,
+        "src": "/optimized/213ce1d1ac79b3a4-1024.webp"
+      }
+    ]
+  },
+  "/images/Rainbow Sprinkles in Glass Bowl.png": {
+    "width": 1293,
+    "height": 1217,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/63db7b0d660478ea-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/63db7b0d660478ea-960.webp"
+      },
+      {
+        "width": 1293,
+        "src": "/optimized/63db7b0d660478ea-1293.webp"
+      }
+    ]
+  },
+  "/images/Vanilla, Strawberry, and Chocolate Trio.png": {
+    "width": 1254,
+    "height": 1254,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/d8a0c973f7c716a3-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/d8a0c973f7c716a3-960.webp"
+      },
+      {
+        "width": 1254,
+        "src": "/optimized/d8a0c973f7c716a3-1254.webp"
+      }
+    ]
+  },
+  "/krunchy/Chocolate Dream Waffle Slice.png": {
+    "width": 1173,
+    "height": 1341,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/fee8b4934a7f7570-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/fee8b4934a7f7570-960.webp"
+      },
+      {
+        "width": 1173,
+        "src": "/optimized/fee8b4934a7f7570-1173.webp"
+      }
+    ]
+  },
+  "/krunchy/Golden Fries, Grilled Chicken, and Ketchup.png": {
+    "width": 1331,
+    "height": 1182,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/65d592836ae1cce1-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/65d592836ae1cce1-960.webp"
+      },
+      {
+        "width": 1331,
+        "src": "/optimized/65d592836ae1cce1-1331.webp"
+      }
+    ]
+  },
+  "/krunchy/Golden Hot Dog Buffet Display.png": {
+    "width": 1070,
+    "height": 1470,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/0195a4132f240350-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/0195a4132f240350-960.webp"
+      },
+      {
+        "width": 1070,
+        "src": "/optimized/0195a4132f240350-1070.webp"
+      }
+    ]
+  },
+  "/krunchy/Golden Waffle Skewer Display.png": {
+    "width": 1086,
+    "height": 1448,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/d2cdb66a3355c319-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/d2cdb66a3355c319-960.webp"
+      },
+      {
+        "width": 1086,
+        "src": "/optimized/d2cdb66a3355c319-1086.webp"
+      }
+    ]
+  },
+  "/krunchy/Jollof Spaghetti with Charred Chicken.png": {
+    "width": 1087,
+    "height": 1447,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/87dba4d7bf605f97-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/87dba4d7bf605f97-960.webp"
+      },
+      {
+        "width": 1087,
+        "src": "/optimized/87dba4d7bf605f97-1087.webp"
+      }
+    ]
+  },
+  "/krunchy/KrunchyKremmy Orange Chapman.png": {
+    "width": 953,
+    "height": 1650,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/71dea9a6f85ec7cf-480.webp"
+      },
+      {
+        "width": 953,
+        "src": "/optimized/71dea9a6f85ec7cf-953.webp"
+      }
+    ]
+  },
+  "/krunchy/KrunchyKremmy Popcorn Bag Mockup.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/43d4dd44f031b7f6-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/43d4dd44f031b7f6-960.webp"
+      },
+      {
+        "width": 1024,
+        "src": "/optimized/43d4dd44f031b7f6-1024.webp"
+      }
+    ]
+  },
+  "/krunchy/Pastel KrunchyKremmy Dessert Cart.png": {
+    "width": 1145,
+    "height": 1374,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/5f961a21999a5147-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/5f961a21999a5147-960.webp"
+      },
+      {
+        "width": 1145,
+        "src": "/optimized/5f961a21999a5147-1145.webp"
+      }
+    ]
+  },
+  "/krunchy/Refreshing Citrus Punch with Ice and Fruit.png": {
+    "width": 1024,
+    "height": 1536,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/71caa1a51d477989-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/71caa1a51d477989-960.webp"
+      },
+      {
+        "width": 1024,
+        "src": "/optimized/71caa1a51d477989-1024.webp"
+      }
+    ]
+  },
+  "/krunchy/Refreshing Krunchykremmy Lemonade Pouches.png": {
+    "width": 1070,
+    "height": 1470,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/2348071eabf347b1-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/2348071eabf347b1-960.webp"
+      },
+      {
+        "width": 1070,
+        "src": "/optimized/2348071eabf347b1-1070.webp"
+      }
+    ]
+  },
+  "/krunchy/Sweet Cotton Candy Moment.png": {
+    "width": 1363,
+    "height": 1154,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/4fb819f03e39af8f-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/4fb819f03e39af8f-960.webp"
+      },
+      {
+        "width": 1363,
+        "src": "/optimized/4fb819f03e39af8f-1363.webp"
+      }
+    ]
+  },
+  "/krunchy/Tropical Garden Cupcake Celebration.png": {
+    "width": 1070,
+    "height": 1470,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/b1932749339a0deb-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/b1932749339a0deb-960.webp"
+      },
+      {
+        "width": 1070,
+        "src": "/optimized/b1932749339a0deb-1070.webp"
+      }
+    ]
+  },
+  "/krunchy/Vibrant Orange KrunchyKremmy Pouches.png": {
+    "width": 1071,
+    "height": 1469,
+    "variants": [
+      {
+        "width": 480,
+        "src": "/optimized/0b6cc9d433c5df7e-480.webp"
+      },
+      {
+        "width": 960,
+        "src": "/optimized/0b6cc9d433c5df7e-960.webp"
+      },
+      {
+        "width": 1071,
+        "src": "/optimized/0b6cc9d433c5df7e-1071.webp"
+      }
+    ]
+  }
+}

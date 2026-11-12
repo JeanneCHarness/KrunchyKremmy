@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock3, MapPin, PartyPopper, Sparkles, X } from "lucide-react";
+import ResponsiveImage from "./ResponsiveImage.jsx";
+import { getPersistentIdempotencyKey } from "./idempotency-storage.js";
 
 const sampleEvents = {
   eventTypes: [
@@ -56,6 +58,12 @@ const serviceGroups = {
 
 const emptyCustomization = () => ({ needsAssistance: false });
 const imageSource = (url) => url.replaceAll("%2C", ",");
+const BOOKING_IDEMPOTENCY_STORAGE_KEY = "krunchykremmy:booking-idempotency:v1";
+const createBookingIdempotencyKey = () => Array.from(
+  crypto.getRandomValues(new Uint8Array(32)),
+  (byte) => byte.toString(16).padStart(2, "0")
+).join("");
+const isBookingIdempotencyKey = (value) => /^[a-f0-9]{64}$/.test(value);
 const getLocalDateTime = (offsetDays = 30, hourOffset = 0) => {
   const date = new Date(Date.now() + offsetDays * 86400000 + hourOffset * 3600000);
   date.setMinutes(0, 0, 0);
@@ -93,10 +101,10 @@ export function EventsSection({ onBook }) {
   return (
     <section className="events-section" id="events">
       <div className="events-hero">
-        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1800&q=86" alt="A warmly decorated celebration ready for guests" loading="lazy" />
+        <ResponsiveImage src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=1800&q=86" alt="A warmly decorated celebration ready for guests" sizes="100vw" />
         <div className="events-hero-scrim" />
         <div className="events-hero-content">
-          <p className="eyebrow"><span className="eyebrow-mark">✳</span> The good stuff, together</p>
+          <p className="eyebrow"><span className="eyebrow-mark star-decoration">✳</span> The good stuff, together</p>
           <h2>Make every celebration<br />a little <em>sweeter.</em></h2>
           <p>From birthdays to big-day celebrations, we bring sweet treats, hot food, and refreshing drinks to your special occasion.</p>
           <div className="events-hero-actions"><button className="button button-dark" onClick={onBook}>Tell us about your event <ArrowRight size={17} /></button><a href="#event-packages" className="text-link">Explore the packages <ArrowRight size={15} /></a></div>
@@ -110,7 +118,7 @@ export function EventsSection({ onBook }) {
       <div className="event-service-grid section-wrap">
         {catalog.services.map((service, index) => (
           <article className="event-service-card" key={service.id}>
-            <div className="event-service-image">            <img src={imageSource(service.imageUrl)} alt="" loading="lazy" /><span>0{index + 1} / MADE FOR SHARING</span></div>
+            <div className="event-service-image"><ResponsiveImage src={imageSource(service.imageUrl)} alt="" sizes="(max-width: 700px) 90vw, 25vw" /><span>0{index + 1} / MADE FOR SHARING</span></div>
             <div className="event-service-copy"><h3>{service.name}</h3><p>{service.description}</p><button className="text-link" onClick={onBook}>Make it part of your day <ArrowRight size={15} /></button></div>
           </article>
         ))}
@@ -120,7 +128,7 @@ export function EventsSection({ onBook }) {
         <div className="event-package-grid">
           {catalog.packages.map((eventPackage) => (
             <article className="event-package-card" key={eventPackage.id}>
-              <span className="package-flower">✳</span><p className="eyebrow">MADE AROUND YOU</p><h3>{eventPackage.name}</h3><p className="package-description">{eventPackage.description}</p>
+              <span className="package-flower star-decoration">✳</span><p className="eyebrow">MADE AROUND YOU</p><h3>{eventPackage.name}</h3><p className="package-description">{eventPackage.description}</p>
               <div className="package-services">{eventPackage.items.map(({ service }) => <span key={service.id}><Check size={13} />{service.name}</span>)}</div>
               <div className="package-price"><span>Pricing</span><strong>Request a quote</strong></div>
               <button className="button button-outline" onClick={() => onBook(eventPackage)}>Ask about this package <ArrowRight size={16} /></button>
@@ -152,7 +160,6 @@ export function EventBookingWizard({ initialPackage, onClose, onSubmitted }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [confirmation, setConfirmation] = useState(null);
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     let active = true;
@@ -283,11 +290,17 @@ export function EventBookingWizard({ initialPackage, onClose, onSubmitted }) {
         startsAt: timeAsIso(booking.startsLocal),
         endsAt: timeAsIso(booking.endsLocal),
         guestCount: Number(booking.guestCount),
-        services: booking.services.map((service) => ({ ...service, servings: Number(service.servings) })),
-        idempotencyKey
+        services: booking.services.map((service) => ({ ...service, servings: Number(service.servings) }))
       };
       delete payload.startsLocal;
       delete payload.endsLocal;
+      const idempotencyKey = await getPersistentIdempotencyKey({
+        storageKey: BOOKING_IDEMPOTENCY_STORAGE_KEY,
+        payload,
+        createKey: createBookingIdempotencyKey,
+        validateKey: isBookingIdempotencyKey
+      });
+      payload.idempotencyKey = idempotencyKey;
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -340,7 +353,7 @@ export function EventBookingWizard({ initialPackage, onClose, onSubmitted }) {
             <button className="button button-dark" onClick={onClose}>Back to KrunchyKremmy <ArrowRight size={17} /></button>
           </div>
         ) : <>
-          <div className="event-wizard-header"><p className="eyebrow"><span className="eyebrow-mark">✳</span> SWEET CELEBRATIONS</p><h2 id="event-booking-title">Let’s make it <em>memorable.</em></h2><p>Tell us a little about the day. We will take it from here.</p></div>
+          <div className="event-wizard-header"><p className="eyebrow"><span className="eyebrow-mark star-decoration">✳</span> SWEET CELEBRATIONS</p><h2 id="event-booking-title">Let’s make it <em>memorable.</em></h2><p>Tell us a little about the day. We will take it from here.</p></div>
           <div className="wizard-progress" aria-label={`Step ${step + 1} of ${steps.length}`}><div className="wizard-progress-track"><span style={{ width: `${((step + 1) / steps.length) * 100}%` }} /></div><div className="wizard-step-labels">{steps.map((label, index) => <span className={index === step ? "current" : index < step ? "complete" : ""} key={label}><i>{index < step ? <Check size={11} /> : index + 1}</i>{label}</span>)}</div></div>
           {!catalogReady && <p className="booking-sample-banner">Preview options shown. Live services and booking submission require the event database.</p>}
           <div className="event-wizard-body">
@@ -361,7 +374,7 @@ export function EventBookingWizard({ initialPackage, onClose, onSubmitted }) {
               <p className="eyebrow service-select-kicker">OR PICK YOUR STATIONS</p>
               <div className="wizard-service-list">{catalog.services.map((service) => {
                 const checked = booking.services.some((item) => item.serviceId === service.id);
-                return <button type="button" className={`wizard-service ${checked ? "selected" : ""}`} key={service.id} onClick={() => toggleService(service.id)}><img src={imageSource(service.imageUrl)} alt="" /><span className="wizard-service-copy"><strong>{service.name}</strong><small>{service.description}</small><small className="includes-note">{Array.isArray(service.includes) ? service.includes.slice(0, 3).join(" · ") : ""}</small></span><span className="service-check">{checked && <Check size={16} />}</span></button>;
+                return <button type="button" className={`wizard-service ${checked ? "selected" : ""}`} key={service.id} onClick={() => toggleService(service.id)}><ResponsiveImage src={imageSource(service.imageUrl)} alt="" sizes="65px" /><span className="wizard-service-copy"><strong>{service.name}</strong><small>{service.description}</small><small className="includes-note">{Array.isArray(service.includes) ? service.includes.slice(0, 3).join(" · ") : ""}</small></span><span className="service-check">{checked && <Check size={16} />}</span></button>;
               })}</div>
               <label className="other-service-note">Something special in mind?<textarea value={booking.specialRequests} onChange={(event) => update("specialRequests", event.target.value)} placeholder="Tell us what would make the day yours…" /></label>
             </div>}

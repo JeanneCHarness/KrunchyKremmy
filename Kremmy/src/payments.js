@@ -11,15 +11,24 @@ function requirePaystackConfig() {
 
 async function paystackRequest(path, options = {}) {
   requirePaystackConfig();
-  const response = await fetch(`https://api.paystack.co${path}`, {
-    ...options,
-    headers: {
+  const initializationRequest = path === "/transaction/initialize";
+  let response;
+  try {
+    response = await fetch(`https://api.paystack.co${path}`, {
+      ...options,
+      headers: {
       Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
       ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...options.headers
+        ...options.headers
     },
-    signal: AbortSignal.timeout(10000)
-  });
+      signal: AbortSignal.timeout(10000)
+    });
+  } catch {
+    const error = new Error("Secure payment could not be completed. Please try again.");
+    error.status = 503;
+    error.outcomeUnknown = initializationRequest;
+    throw error;
+  }
   let result;
   try {
     result = await response.json();
@@ -27,12 +36,14 @@ async function paystackRequest(path, options = {}) {
     console.error("Paystack API returned an invalid response:", response.status);
     const error = new Error("Secure payment could not be completed. Please try again.");
     error.status = 502;
+    error.outcomeUnknown = initializationRequest && response.status >= 200 && response.status < 500;
     throw error;
   }
   if (!response.ok || result?.status !== true || !result.data || typeof result.data !== "object") {
     console.error("Paystack API request failed:", result?.message || response.status);
     const error = new Error("Secure payment could not be completed. Please try again.");
     error.status = 502;
+    error.outcomeUnknown = initializationRequest && response.status >= 500;
     throw error;
   }
   return result.data;
@@ -67,6 +78,7 @@ export async function initializePaystackTransaction(order, origin, reference = c
   if (data.reference !== reference || !data.authorization_url) {
     const error = new Error("Paystack did not return a valid payment link.");
     error.status = 502;
+    error.outcomeUnknown = true;
     throw error;
   }
   return { reference: data.reference, authorizationUrl: data.authorization_url };

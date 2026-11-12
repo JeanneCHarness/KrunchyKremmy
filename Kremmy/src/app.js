@@ -15,7 +15,7 @@ import {
   verifyPaystackTransaction,
   verifyPaystackWebhook
 } from "./payments.js";
-import { bookingSchema, validateBookingTime, validateServiceCustomization } from "./event-bookings.js";
+import { bookingRequestHash, bookingSchema, validateBookingTime, validateServiceCustomization } from "./event-bookings.js";
 import { createAdminRouter } from "./admin-routes.js";
 import { generateScheduleSlots, localDateTimeToUtc } from "./fulfillment.js";
 import { sendOrderNotification } from "./order-notifications.js";
@@ -100,8 +100,7 @@ async function settleOrderByReference(reference, transactionData) {
           status: "PAID",
           providerTransactionId: String(transactionData.id),
           verifiedAt: new Date(),
-          reconciliationRequired: Boolean(attempt.reconciliationRequired) ||
-            (!alreadyPaid && reservationExpired) ||
+          reconciliationRequired: (!alreadyPaid && reservationExpired) ||
             (alreadyPaid && current.providerTransactionId !== String(transactionData.id))
         }
       });
@@ -136,8 +135,8 @@ async function releaseOrderByReference(reference, transactionData) {
     });
     if (attempt) {
       await transaction.paymentAttempt.updateMany({
-        where: { id: attempt.id, status: "PENDING" },
-        data: { status: "FAILED" }
+        where: { id: attempt.id, status: { in: ["PENDING", "FAILED"] } },
+        data: { status: "FAILED", reconciliationRequired: false, verifiedAt: new Date() }
       });
     }
     if (updated.count !== 1) return;
@@ -178,8 +177,15 @@ async function initializeOrderPayment(order, origin) {
     return { reference: order.paymentReference, authorizationUrl: order.paymentAuthorizationUrl };
   }
   if (order.paymentReference) {
-    const error = new Error("Payment is already being prepared. Please retry in a moment.");
-    error.status = 409;
+    const attempt = await prisma.paymentAttempt.findUnique({
+      where: { reference: order.paymentReference },
+      select: { reconciliationRequired: true }
+    });
+    const error = new Error(attempt?.reconciliationRequired
+      ? `We could not confirm whether Paystack started payment for order ${order.orderNumber}. Do not start another payment until this one is verified.`
+      : "Payment is already being prepared. Please retry in a moment.");
+    error.status = attempt?.reconciliationRequired ? 503 : 409;
+    error.expose = Boolean(attempt?.reconciliationRequired);
     throw error;
   }
   const reference = createPaymentReference();
@@ -218,7 +224,18 @@ async function initializeOrderPayment(order, origin) {
   try {
     payment = await initializePaystackTransaction({ ...order, totalCents: amountKobo, currency: order.currency }, origin, reference);
   } catch (error) {
-    await prisma.paymentAttempt.update({ where: { id: attempt.id }, data: { status: "FAILED" } });
+    await prisma.paymentAttempt.updateMany({
+      where: { id: attempt.id, status: "PENDING" },
+      data: {
+        status: error.outcomeUnknown ? "PENDING" : "FAILED",
+        reconciliationRequired: Boolean(error.outcomeUnknown)
+      }
+    });
+    if (error.outcomeUnknown) {
+      error.status = 503;
+      error.expose = true;
+      error.message = `We could not confirm whether Paystack started payment for order ${order.orderNumber}. Do not start another payment until this one is verified.`;
+    }
     throw error;
   }
   const saved = await prisma.order.updateMany({
@@ -605,11 +622,50 @@ app.post("/api/account/orders/:orderNumber/retry-payment", publicOperationLimit,
     const reservationMinutes = assertCheckoutConfiguration();
     await expireFulfillmentReservations();
     const orderNumber = z.string().trim().min(1).max(64).parse(request.params.orderNumber);
-    const current = await prisma.order.findFirst({
+    let current = await prisma.order.findFirst({
       where: { orderNumber, userId: request.auth.user.id },
       include: { items: true }
     });
     if (!current) return response.status(404).json({ error: "Order not found." });
+
+    const unresolvedAttempts = await prisma.paymentAttempt.findMany({
+      where: { orderId: current.id, reconciliationRequired: true },
+      select: { reference: true }
+    });
+    for (const attempt of unresolvedAttempts) {
+      const verified = await verifyPaystackTransaction(attempt.reference);
+      if (verified.status === "success") {
+        await settleOrderByReference(attempt.reference, verified);
+        const settled = await prisma.order.findUnique({
+          where: { id: current.id },
+          select: { orderNumber: true, paymentStatus: true, status: true }
+        });
+        return response.json(settled);
+      }
+      if (verified.status !== "failed") {
+        return response.status(409).json({
+          error: "A previous payment is still unresolved. Do not retry until Paystack confirms its final status."
+        });
+      }
+      await releaseOrderByReference(attempt.reference, verified);
+    }
+    if (unresolvedAttempts.length) {
+      current = await prisma.order.findFirst({
+        where: { orderNumber, userId: request.auth.user.id },
+        include: { items: true }
+      });
+      if (!current) return response.status(404).json({ error: "Order not found." });
+    }
+
+    if (current.paymentStatus === "PENDING" && current.status === "PENDING" && current.reservationActive) {
+      if (current.paymentAuthorizationUrl) {
+        return response.json({ orderNumber: current.orderNumber, checkoutUrl: current.paymentAuthorizationUrl });
+      }
+      return response.status(409).json({
+        error: "Payment setup is still being verified. Do not retry this payment yet; contact the shop if it remains unresolved."
+      });
+    }
+
     if (
       current.paymentStatus !== "FAILED" ||
       current.status !== "CANCELLED" ||
@@ -722,27 +778,29 @@ app.post("/api/account/orders/:orderNumber/retry-payment", publicOperationLimit,
       const payment = await initializeOrderPayment(reopened, process.env.FRONTEND_ORIGIN || "http://localhost:5173");
       response.json({ orderNumber: reopened.orderNumber, checkoutUrl: payment.authorizationUrl });
     } catch (error) {
-      await prisma.$transaction(async (transaction) => {
-        const reservedOrder = await transaction.order.findUnique({
-          where: { id: reopened.id },
-          include: { items: true }
+      if (!error.outcomeUnknown) {
+        await prisma.$transaction(async (transaction) => {
+          const reservedOrder = await transaction.order.findUnique({
+            where: { id: reopened.id },
+            include: { items: true }
+          });
+          const cancelled = await transaction.order.updateMany({
+            where: { id: reopened.id, paymentStatus: "PENDING" },
+            data: { paymentStatus: "FAILED", status: "CANCELLED", reservationActive: false }
+          });
+          if (cancelled.count !== 1) return;
+          if (reservedOrder) await releaseOrderResources(transaction, reservedOrder);
+          await transaction.orderStatusHistory.create({
+            data: {
+              orderId: reopened.id,
+              fromStatus: "PENDING",
+              toStatus: "CANCELLED",
+              actorId: "checkout",
+              reason: "Paystack payment retry initialization failed."
+            }
+          });
         });
-        const cancelled = await transaction.order.updateMany({
-          where: { id: reopened.id, paymentStatus: "PENDING" },
-          data: { paymentStatus: "FAILED", status: "CANCELLED", reservationActive: false }
-        });
-        if (cancelled.count !== 1) return;
-        if (reservedOrder) await releaseOrderResources(transaction, reservedOrder);
-        await transaction.orderStatusHistory.create({
-          data: {
-            orderId: reopened.id,
-            fromStatus: "PENDING",
-            toStatus: "CANCELLED",
-            actorId: "checkout",
-            reason: "Paystack payment retry initialization failed."
-          }
-        });
-      });
+      }
       throw error;
     }
   } catch (error) {
@@ -977,17 +1035,30 @@ app.get("/api/events/availability", async (request, response, next) => {
 });
 
 app.post("/api/bookings", publicBookingLimit, optionalAuthentication, async (request, response, next) => {
+  let requestHash;
   try {
     const input = bookingSchema.parse(request.body);
     if (input.honeypot) return response.status(400).json({ error: "Booking request could not be accepted." });
+    requestHash = bookingRequestHash(input);
+    const existing = await prisma.booking.findUnique({
+      where: { idempotencyKey: input.idempotencyKey },
+      select: { reference: true, accessTokenHash: true, idempotencyRequestHash: true }
+    });
+    if (existing) {
+      if (existing.idempotencyRequestHash && existing.idempotencyRequestHash !== requestHash) {
+        return response.status(409).json({ error: "This booking request key is already in use." });
+      }
+      const accessTokenMatches = constantTimeHexMatch(hashAccessToken(input.idempotencyKey), existing.accessTokenHash);
+      return response.status(200).json({
+        reference: existing.reference,
+        duplicate: true,
+        ...(accessTokenMatches ? { accessToken: input.idempotencyKey } : {})
+      });
+    }
+
     const now = new Date();
     const { startsAt, endsAt } = validateBookingTime(input, now);
     const availabilityNote = await reviewEventAvailability(startsAt, endsAt, input.timeZone);
-    const existing = await prisma.booking.findUnique({
-      where: { idempotencyKey: input.idempotencyKey },
-      select: { reference: true }
-    });
-    if (existing) return response.status(200).json({ reference: existing.reference, duplicate: true });
 
     const [eventType, serviceRecords, selectedPackage] = await Promise.all([
       prisma.eventType.findFirst({ where: { slug: input.eventTypeSlug, active: true }, select: { id: true } }),
@@ -1024,12 +1095,13 @@ app.post("/api/bookings", publicBookingLimit, optionalAuthentication, async (req
 
     const namesById = new Map(serviceRecords.map((service) => [service.id, service.name]));
     const reference = `EVT-${randomBytes(5).toString("hex").toUpperCase()}`;
-    const accessToken = randomBytes(32).toString("base64url");
+    const accessToken = input.idempotencyKey;
     const booking = await prisma.$transaction(async (transaction) => {
       const saved = await transaction.booking.create({
         data: {
           reference,
           idempotencyKey: input.idempotencyKey,
+          idempotencyRequestHash: requestHash,
           accessTokenHash: hashAccessToken(accessToken),
           userId: request.auth?.user.id,
           eventTypeId: eventType.id,
@@ -1082,8 +1154,24 @@ app.post("/api/bookings", publicBookingLimit, optionalAuthentication, async (req
   } catch (error) {
     if (error.code === "P2002" && String(error.meta?.target || "").includes("idempotencyKey")) {
       try {
-        const existing = await prisma.booking.findUnique({ where: { idempotencyKey: request.body?.idempotencyKey }, select: { reference: true } });
-        if (existing) return response.status(200).json({ reference: existing.reference, duplicate: true });
+        const key = request.body?.idempotencyKey;
+        const existing = typeof key === "string"
+          ? await prisma.booking.findUnique({
+            where: { idempotencyKey: key },
+            select: { reference: true, accessTokenHash: true, idempotencyRequestHash: true }
+          })
+          : null;
+        if (existing) {
+          if (existing.idempotencyRequestHash && existing.idempotencyRequestHash !== requestHash) {
+            return response.status(409).json({ error: "This booking request key is already in use." });
+          }
+          const accessTokenMatches = constantTimeHexMatch(hashAccessToken(key), existing.accessTokenHash);
+          return response.status(200).json({
+            reference: existing.reference,
+            duplicate: true,
+            ...(accessTokenMatches ? { accessToken: key } : {})
+          });
+        }
       } catch (lookupError) {
         return next(lookupError);
       }
@@ -1727,21 +1815,23 @@ app.post("/api/checkout/session", publicOperationLimit, optionalAuthentication, 
     try {
       payment = await initializeOrderPayment(order, process.env.FRONTEND_ORIGIN || "http://localhost:5173");
     } catch (error) {
-      await prisma.$transaction(async (transaction) => {
-        const reservedOrder = await transaction.order.findUnique({
-          where: { id: order.id },
-          include: { items: true }
+      if (!error.outcomeUnknown) {
+        await prisma.$transaction(async (transaction) => {
+          const reservedOrder = await transaction.order.findUnique({
+            where: { id: order.id },
+            include: { items: true }
+          });
+          const cancelled = await transaction.order.updateMany({
+            where: { id: order.id, paymentStatus: "PENDING" },
+            data: { paymentStatus: "FAILED", status: "CANCELLED", reservationActive: false }
+          });
+          if (cancelled.count !== 1) return;
+          if (reservedOrder) await releaseOrderResources(transaction, reservedOrder);
+          await transaction.orderStatusHistory.create({
+            data: { orderId: order.id, fromStatus: "PENDING", toStatus: "CANCELLED", actorId: "checkout", reason: "Paystack transaction initialization failed." }
+          });
         });
-        const cancelled = await transaction.order.updateMany({
-          where: { id: order.id, paymentStatus: "PENDING" },
-          data: { paymentStatus: "FAILED", status: "CANCELLED", reservationActive: false }
-        });
-        if (cancelled.count !== 1) return;
-        if (reservedOrder) await releaseOrderResources(transaction, reservedOrder);
-        await transaction.orderStatusHistory.create({
-          data: { orderId: order.id, fromStatus: "PENDING", toStatus: "CANCELLED", actorId: "checkout", reason: "Paystack transaction initialization failed." }
-        });
-      });
+      }
       throw error;
     }
     try {

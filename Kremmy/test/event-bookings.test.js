@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { bookingSchema, validateBookingTime, validateServiceCustomization } from "../src/event-bookings.js";
+import { bookingRequestHash, bookingSchema, validateBookingTime, validateServiceCustomization } from "../src/event-bookings.js";
 
 const futureStart = new Date(Date.now() + 30 * 86400000);
 futureStart.setMinutes(0, 0, 0);
@@ -31,6 +31,20 @@ test("booking request accepts valid quote-only event details", () => {
   assert.equal(parsed.guestCount, 30);
   assert.equal(parsed.services[0].customization.needsAssistance, false);
   assert.equal(parsed.budgetRange, "$250–$500");
+});
+
+test("booking idempotency accepts new 256-bit keys while preserving UUID compatibility", () => {
+  assert.equal(bookingSchema.safeParse({ ...validRequest, idempotencyKey: "a".repeat(64) }).success, true);
+  assert.equal(bookingSchema.safeParse({ ...validRequest, idempotencyKey: "a".repeat(63) }).success, false);
+  assert.equal(bookingSchema.safeParse(validRequest).success, true);
+});
+
+test("booking request hashes bind a key to its payload but exclude the key itself", () => {
+  const first = bookingRequestHash(bookingSchema.parse(validRequest));
+  const replay = bookingRequestHash(bookingSchema.parse({ ...validRequest, idempotencyKey: "a".repeat(64) }));
+  const changed = bookingRequestHash(bookingSchema.parse({ ...validRequest, customerName: "Jamie Treat" }));
+  assert.equal(first, replay);
+  assert.notEqual(first, changed);
 });
 
 test("booking requires service selection and explicit terms acceptance", () => {

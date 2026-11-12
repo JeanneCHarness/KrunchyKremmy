@@ -36,11 +36,15 @@ Requirements: Node.js 20.19+, npm, and PostgreSQL.
 1. Copy `.env.example` to `.env`; set a local PostgreSQL connection string.
 2. Install dependencies with `npm install`.
 3. Generate the Prisma client: `npm run db:generate`.
-4. Apply checked-in database migrations locally: `npm run db:migrate` (production: `npm run db:deploy`). Migrations add product customization, optional booking budget, NGN defaults, Paystack reference fields, and additive fulfilment/scheduling tables without relabeling historical currency values or deleting rows.
+4. Apply checked-in database migrations locally: `npm run db:migrate` (production: `npm run db:deploy`). Migrations add product customization, optional booking budget and request fingerprints, NGN defaults, Paystack reference fields, and additive fulfilment/scheduling tables without relabeling historical currency values or deleting rows.
 5. Load the clearly identified sample catalog: `npm run db:seed`.
 6. Start the frontend and API: `npm run dev`.
 
 The frontend is served at `http://localhost:5173`; the API health endpoint is `http://localhost:4000/api/health`.
+
+## Responsive image assets
+
+Original product and event photography remains unchanged in `Krunchy/public/`. After adding or replacing a local photo, regenerate responsive WebP variants and the manifest from the repository root with `npm run optimize:images -w Krunchy`, then include the generated files in the deployment. The storefront selects appropriately sized variants; source photos remain the fallback.
 
 ## Deploy on Vercel
 
@@ -66,7 +70,7 @@ To provision the first staff account, apply database migrations, then set `ADMIN
 
 - `GET /api/events` — active event types, services, configured option lists, and packages.
 - `GET /api/events/availability?startsAt=...&endsAt=...&timeZone=...` — reports that a date is requestable, but always marks availability for staff review.
-- `POST /api/bookings` — accepts a validated guest request, checks active event/services/options, records consent, optional budget range, and an availability-review note, and returns a reference plus a one-time private access code.
+- `POST /api/bookings` — accepts a validated guest request, checks active event/services/options, records consent, optional budget range, and an availability-review note, and returns a reference plus a private access token. Replays with the same idempotency key and payload return the original reference; reusing a key for a different payload is rejected.
 - `GET /api/bookings/:reference` — requires the one-time code in `x-booking-access-token`; do not share the code.
 
 Event service/category/package records in the seed are examples. A request submission only records an inquiry; it never creates a confirmed reservation, calculates a quote, reserves capacity, or takes a deposit. Staff can review inquiries and create quotations through the protected dashboard, but Resend email delivery is unverified and bookings cannot be confirmed. Until email is configured and tested, staff must check delivery status and contact customers manually. Do not expose a public admin API as a substitute.
@@ -85,7 +89,7 @@ Checkout remains disabled unless explicitly configured. The new event packages a
 
 - Staff configure these options in **Delivery & fulfilment**. There are no preloaded active zones, fees, pickup locations, hours, or capacities; checkout remains unavailable until complete real business settings are saved and activated.
 - Delivery neighbourhood and fee are validated against the active zone on the backend. Pickup orders snapshot the single active pickup location. Each order snapshots its fee, customer fulfilment details, and scheduled time.
-- `GET /api/fulfillment/config` returns public active fulfilment options. `GET /api/fulfillment/slots?method=DELIVERY|PICKUP&date=YYYY-MM-DD&zoneId=...` lists future capacity. `POST /api/checkout/quote` calculates current trusted item/fulfilment totals. `POST /api/checkout/session` revalidates and reserves inventory/capacity in a serializable database transaction before initializing Paystack. Signed-in customers can retry a failed payment with `POST /api/account/orders/:orderNumber/retry-payment`, which revalidates and re-reserves the original order.
+- `GET /api/fulfillment/config` returns public active fulfilment options. `GET /api/fulfillment/slots?method=DELIVERY|PICKUP&date=YYYY-MM-DD&zoneId=...` lists future capacity. `POST /api/checkout/quote` calculates current trusted item/fulfilment totals. `POST /api/checkout/session` revalidates and reserves inventory/capacity in a serializable database transaction before initializing Paystack; the storefront reuses the same idempotency key for retries of an unchanged checkout payload. Signed-in customers can retry a failed payment with `POST /api/account/orders/:orderNumber/retry-payment`, which revalidates and re-reserves the original order.
 - Configure `PAYMENT_RESERVATION_MINUTES` as a positive integer (1–1440) and leave `CHECKOUT_ENABLED=false` until schedules, pickup/delivery configuration, and Paystack test-mode checkout have been verified. Expired reservations are released on subsequent slot/checkout activity; payment failures and late successful payments are retained for reconciliation.
 - Apply the new migration using a non-production PostgreSQL database first. This workspace has not verified the migration against a configured database. Staff order tools support delivery/pickup progression and dispatch details. Payment/status email notifications, staff retry, and an automated reservation-expiry worker are implemented but still require database/provider integration testing before production use.
 

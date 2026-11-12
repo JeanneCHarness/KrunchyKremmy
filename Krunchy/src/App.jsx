@@ -6,6 +6,8 @@ import {
 import { categories, developmentMenu } from "./menu.js";
 import { EventBookingWizard, EventsSection } from "./Events.jsx";
 import AdminDashboard from "./AdminDashboard.jsx";
+import ResponsiveImage from "./ResponsiveImage.jsx";
+import { getPersistentIdempotencyKey } from "./idempotency-storage.js";
 
 const money = (kobo) => new Intl.NumberFormat("en-NG", {
   style: "currency", currency: "NGN"
@@ -23,6 +25,8 @@ function dateInBusinessTimezone(timeZone) {
 }
 
 const imageSource = (url) => url.replaceAll("%2C", ",");
+const CHECKOUT_IDEMPOTENCY_STORAGE_KEY = "krunchykremmy:checkout-idempotency:v1";
+const isCheckoutIdempotencyKey = (value) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 
 const builderChoices = {
   waffle: {
@@ -247,7 +251,7 @@ function App() {
     <>
       <div className="announcement">
         <span>Every Bite, A Little More Joy.</span>
-        <span className="announcement-right">Small-batch treats, made with love <span aria-hidden="true">✳</span></span>
+        <span className="announcement-right">Small-batch treats, made with love <span className="star-decoration" aria-hidden="true">✳</span></span>
       </div>
       <header className="site-header">
         <button className="icon-button mobile-menu" aria-label="Toggle navigation" onClick={() => setMobileNavOpen(!mobileNavOpen)}>
@@ -278,18 +282,24 @@ function App() {
       <main>
         <section className="hero" id="home">
           <div className="hero-copy">
-            <p className="eyebrow"><span className="eyebrow-mark">✳</span> Welcome to the sweet side of life</p>
+            <p className="eyebrow"><span className="eyebrow-mark star-decoration">✳</span> Welcome to the sweet side of life</p>
             <h1>Welcome to the<br />Sweet Side of <em>Life!</em></h1>
             <p className="hero-description">Find a scoop, savour a freshly made meal, or raise a glass to the moment. KrunchyKremmy brings treats, refreshing drinks, and event catering together in one happy place.</p>
             <div className="hero-actions">
               <button className="button button-dark" onClick={() => openShop()}>Find your treat <ArrowRight size={17} /></button>
               <button className="text-link" onClick={() => document.getElementById("build")?.scrollIntoView({ behavior: "smooth" })}>Make it your own <ArrowDownRight size={16} /></button>
             </div>
-            <div className="hero-footnote"><span className="tiny-sun">✳</span> Made for the moments worth savoring</div>
+            <div className="hero-footnote"><span className="tiny-sun star-decoration">✳</span> Made for the moments worth savoring</div>
           </div>
           <div className="hero-art">
-            <img src="/krunchy/Pastel%20KrunchyKremmy%20Dessert%20Cart.png" alt="Pastel KrunchyKremmy dessert cart" />
-            <div className="hero-sticker"><span>made with</span><strong>a little<br />extra love</strong><span>✳ since day one</span></div>
+            <ResponsiveImage
+              src="/krunchy/Pastel%20KrunchyKremmy%20Dessert%20Cart.png"
+              alt="Pastel KrunchyKremmy dessert cart"
+              sizes="(max-width: 700px) 90vw, (max-width: 1100px) 50vw, 45vw"
+              loading="eager"
+              fetchPriority="high"
+            />
+            <div className="hero-sticker"><span>made with</span><strong>a little<br />extra love</strong><span><span className="star-decoration">✳</span> since day one</span></div>
             <span className="hero-caption">The Sunday best <span>—</span> strawberry, vanilla &amp; a crisp bite</span>
           </div>
           <div className="hero-index">01 <span>/</span> 04</div>
@@ -303,7 +313,7 @@ function App() {
           <div className="category-grid">
             {categories.map((item, index) => (
               <button className={`category-card ${item.className}`} key={item.slug} onClick={() => openShop(item.slug)}>
-                <img src={imageSource(item.imageUrl)} alt="" loading="lazy" />
+                <ResponsiveImage src={imageSource(item.imageUrl)} alt="" sizes="(max-width: 700px) 45vw, 23vw" />
                 <span className="category-number">0{index + 1} / THE GOOD STUFF</span>
                 <span className="category-copy"><span><strong>{item.name}</strong><small>{item.description}</small></span><span className="round-arrow"><ArrowRight size={18} /></span></span>
               </button>
@@ -345,9 +355,9 @@ function App() {
         </section>
 
         <section className="builder-banner section-wrap" id="build">
-          <div className="builder-photo"><img src="/images/KrunchyKremmy%20Instagram%20Party%20Frame.png" alt="Waffle treats arranged in KrunchyKremmy party frames" loading="lazy" /><span className="photo-note">your masterpiece, incoming</span></div>
+          <div className="builder-photo"><ResponsiveImage src="/images/KrunchyKremmy%20Instagram%20Party%20Frame.png" alt="Waffle treats arranged in KrunchyKremmy party frames" sizes="(max-width: 700px) 100vw, 50vw" /><span className="photo-note">your masterpiece, incoming</span></div>
           <div className="builder-copy">
-            <p className="eyebrow"><span className="eyebrow-mark">✳</span> The fun part</p>
+            <p className="eyebrow"><span className="eyebrow-mark star-decoration">✳</span> The fun part</p>
             <h2>Your treat.<br /><em>Your rules.</em></h2>
             <p>Pick your base. Add the things you love. Make something that tastes like you.</p>
             <div className="builder-links">
@@ -363,7 +373,7 @@ function App() {
         </section>
 
         <section className="little-joy section-wrap" id="story">
-          <span className="joy-flower">✳</span>
+          <span className="joy-flower star-decoration">✳</span>
           <p className="eyebrow">A little note from us</p>
           <h2>Not just dessert.<br />A <em>reason to pause.</em></h2>
           <p>We believe the everyday deserves a little extra. So we make the good stuff in small batches, with ingredients we love and room for one more topping.</p>
@@ -395,7 +405,7 @@ function App() {
           <div className="footer-links"><strong>Say hello</strong><span>Contact details will be added before launch.</span><span>Made fresh, shared often.</span></div>
           <div className="newsletter"><strong>A little sweet mail?</strong><p>New treats and happy little things, now and then.</p><Newsletter onNotice={setNotice} /></div>
         </div>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} KrunchyKremmy</span><span>Made for the moments worth savoring <span className="tiny-sun">✳</span></span><a href="#home">Back to the top ↑</a></div>
+        <div className="footer-bottom"><span>© {new Date().getFullYear()} KrunchyKremmy</span><span>Made for the moments worth savoring <span className="tiny-sun star-decoration">✳</span></span><a href="#home">Back to the top ↑</a></div>
       </footer>
 
       {cartOpen && <CartDrawer cart={cart} total={cartTotal} onClose={() => setCartOpen(false)} onQuantity={changeQuantity} onRemove={(id) => setCart((current) => current.filter((item) => item.lineId !== id))} />}
@@ -413,7 +423,7 @@ function ProductCard({ product, onAdd, onView, isFavorite, onFavorite }) {
     <article className="product-card">
       <button className={`favorite-button ${isFavorite ? "is-favorite" : ""}`} aria-label={isFavorite ? `Remove ${product.name} from saved treats` : `Save ${product.name}`} aria-pressed={isFavorite} onClick={onFavorite}><Heart size={17} /></button>
       <button className="product-image" aria-label={`View ${product.name} details`} onClick={onView}>
-        <img src={imageSource(product.imageUrl)} alt={product.name} loading="lazy" />
+        <ResponsiveImage src={imageSource(product.imageUrl)} alt={product.name} sizes="(max-width: 600px) 48vw, (max-width: 1000px) 33vw, 25vw" />
         {(product.badge || product.featured) && <span className="product-badge">{product.badge || "A little favorite"}</span>}
       </button>
       <div className="product-info">
@@ -451,7 +461,7 @@ function ProductDetails({ product, onClose, onAdd }) {
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="product-modal" role="dialog" aria-modal="true" aria-labelledby="product-title">
         <button className="modal-close icon-button" onClick={onClose} aria-label="Close product details"><X size={20} /></button>
-        <img src={imageSource(product.imageUrl)} alt={product.name} />
+        <ResponsiveImage src={imageSource(product.imageUrl)} alt={product.name} sizes="(max-width: 700px) 90vw, 380px" loading="eager" />
         <div className="product-modal-copy">
           <p className="eyebrow">{product.categoryName || product.category?.name || "A sweet treat"}</p>
           <h2 id="product-title">{product.name}</h2>
@@ -580,7 +590,7 @@ function BuilderModal({ type, onClose, onAdd }) {
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="builder-modal" role="dialog" aria-modal="true" aria-labelledby="builder-title">
         <button className="modal-close icon-button" onClick={onClose} aria-label="Close builder"><X size={20} /></button>
-        <div className="modal-kicker"><span>✳</span> KRUNCHYKREMMY STUDIO / {type.toUpperCase()}</div>
+        <div className="modal-kicker"><span className="star-decoration">✳</span> KRUNCHYKREMMY STUDIO / {type.toUpperCase()}</div>
         <h2 id="builder-title">{config.title}<em>.</em></h2><p className="modal-intro">{config.intro}</p>
         <div className="builder-step"><div className="step-title"><span>01</span><strong>{type === "candy" ? "Choose your bag" : type === "popcorn" ? "Pick your size" : "Start with a base"}</strong></div><div className="choice-list">{(groups.base || []).map((option) => <button key={option.id} className={`choice-card ${baseOption?.id === option.id ? "selected" : ""}`} onClick={() => setBaseId(option.id)}><span>{option.name}</span><small>{money(option.priceCents)}</small></button>)}</div></div>
         {groups.iceCream?.length > 0 && <div className="builder-step"><div className="step-title"><span>02</span><strong>Choose your scoop <small>(up to {groups.iceCream[0].maxSelections})</small></strong></div><div className="option-list">{optionGroup("iceCream")}</div></div>}
@@ -653,6 +663,16 @@ function AccountDialog({ user, initialToken, onUser, onClose }) {
       const response = await fetch(`/api/account/orders/${encodeURIComponent(order.orderNumber)}/retry-payment`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Payment retry could not be started.");
+      if (result.paymentStatus === "PAID") {
+        setOrders((current) => current.map((item) => item.orderNumber === order.orderNumber
+          ? { ...item, paymentStatus: result.paymentStatus, status: result.status }
+          : item));
+        setMessage(result.status === "PAYMENT_REVIEW"
+          ? "Payment was received, but the fulfilment reservation needs staff review."
+          : "This order's payment has already been confirmed.");
+        setBusy(false);
+        return;
+      }
       if (!result.checkoutUrl) throw new Error("Secure checkout did not return a payment link.");
       window.location.assign(result.checkoutUrl);
     } catch (failure) {
@@ -752,7 +772,6 @@ function CartDrawer({ cart, total, onClose, onQuantity, onRemove }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [checkoutState, setCheckoutState] = useState({ loading: false, error: "", message: "" });
-  const [checkoutIdempotencyKey, setCheckoutIdempotencyKey] = useState(() => crypto.randomUUID());
   const [configuration, setConfiguration] = useState(null);
   const [configurationLoading, setConfigurationLoading] = useState(false);
   const [method, setMethod] = useState("PICKUP");
@@ -909,25 +928,44 @@ function CartDrawer({ cart, total, onClose, onQuantity, onRemove }) {
       return;
     }
     setCheckoutState({ loading: true, error: "", message: "" });
+    let payload;
     try {
+      payload = checkoutPayload();
+      const checkoutIdempotencyKey = await getPersistentIdempotencyKey({
+        storageKey: CHECKOUT_IDEMPOTENCY_STORAGE_KEY,
+        payload,
+        createKey: () => crypto.randomUUID(),
+        validateKey: isCheckoutIdempotencyKey
+      });
       const response = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": checkoutIdempotencyKey },
-        body: JSON.stringify(checkoutPayload())
+        body: JSON.stringify(payload)
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Checkout could not be started.");
       if (!result.checkoutUrl) throw new Error("Secure checkout did not return a payment link.");
       window.location.assign(result.checkoutUrl);
     } catch (error) {
+      let message = error.message;
       if (/no longer available|expired|start again/i.test(error.message)) {
-        setCheckoutIdempotencyKey(crypto.randomUUID());
+        try {
+          await getPersistentIdempotencyKey({
+            storageKey: CHECKOUT_IDEMPOTENCY_STORAGE_KEY,
+            payload: payload || checkoutPayload(),
+            createKey: () => crypto.randomUUID(),
+            validateKey: isCheckoutIdempotencyKey,
+            rotate: true
+          });
+        } catch (storageError) {
+          message = storageError.message;
+        }
       }
       if (/slot|fulfilment time/i.test(error.message)) {
         setSelectedSlotId("");
         setSlotsRevision((revision) => revision + 1);
       }
-      setCheckoutState({ loading: false, error: error.message, message: "" });
+      setCheckoutState({ loading: false, error: message, message: "" });
     }
   }
 
@@ -937,7 +975,7 @@ function CartDrawer({ cart, total, onClose, onQuantity, onRemove }) {
         <div className="drawer-heading"><div><p className="eyebrow">The good stuff</p><h2 id="cart-title">Your bag <span>({cart.reduce((sum, item) => sum + item.quantity, 0)})</span></h2></div><button className="icon-button" onClick={onClose} aria-label="Close bag"><X size={20} /></button></div>
         {cart.length === 0 ? <div className="cart-empty"><ShoppingBag size={28} /><h3>Room for something sweet.</h3><p>Your next favorite is just around the corner.</p><button className="button button-dark" onClick={onClose}>Keep exploring <ArrowRight size={16} /></button></div> : <>
           <div className="cart-items">{cart.map((item) => <article className="cart-item" key={item.lineId}>
-            <img src={item.imageUrl} alt="" />
+            <ResponsiveImage src={item.imageUrl} alt="" sizes="82px" />
             <div className="cart-item-info"><h3>{item.name}</h3>{item.customization && <p>{item.customization.displayOptions
               ? item.customization.displayOptions.join(" · ")
               : Object.entries(item.customization).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`).join(" · ")}</p>}<strong>{money(item.priceCents)}</strong><div className="quantity-control"><button onClick={() => onQuantity(item.lineId, -1)} aria-label="Decrease quantity"><Minus size={13} /></button><span>{item.quantity}</span><button onClick={() => onQuantity(item.lineId, 1)} aria-label="Increase quantity"><Plus size={13} /></button></div></div>

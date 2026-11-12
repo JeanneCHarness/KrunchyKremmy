@@ -52,6 +52,54 @@ test("Paystack initializes an NGN transaction with the exact kobo amount and ord
   });
 });
 
+test("Paystack initialization distinguishes uncertain transport outcomes from explicit rejection", async (t) => {
+  const previousCurrency = process.env.PAYSTACK_CURRENCY;
+  const previousSecretKey = process.env.PAYSTACK_SECRET_KEY;
+  const previousFetch = globalThis.fetch;
+  delete process.env.PAYSTACK_CURRENCY;
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_placeholder";
+  t.after(() => {
+    if (previousCurrency === undefined) delete process.env.PAYSTACK_CURRENCY;
+    else process.env.PAYSTACK_CURRENCY = previousCurrency;
+    if (previousSecretKey === undefined) delete process.env.PAYSTACK_SECRET_KEY;
+    else process.env.PAYSTACK_SECRET_KEY = previousSecretKey;
+    globalThis.fetch = previousFetch;
+  });
+
+  const order = {
+    id: "order-1",
+    orderNumber: "KK-1001",
+    email: "customer@example.com",
+    subtotalCents: 12500,
+    currency: "ngn"
+  };
+  globalThis.fetch = async () => { throw new Error("network timeout"); };
+  await assert.rejects(
+    initializePaystackTransaction(order, "https://shop.example", "KK-network"),
+    (error) => error.outcomeUnknown === true
+  );
+
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    status: false,
+    message: "Invalid request",
+    data: null
+  }), { status: 400 });
+  await assert.rejects(
+    initializePaystackTransaction(order, "https://shop.example", "KK-rejected"),
+    (error) => error.outcomeUnknown === false
+  );
+
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    status: false,
+    message: "Temporary provider error",
+    data: null
+  }), { status: 503 });
+  await assert.rejects(
+    initializePaystackTransaction(order, "https://shop.example", "KK-provider-error"),
+    (error) => error.outcomeUnknown === true
+  );
+});
+
 test("Paystack webhook signature accepts a signed raw payload", () => {
   const secret = "sk_test_signature";
   const payload = Buffer.from(JSON.stringify({ event: "charge.success", data: { reference: "KK-test" } }));
